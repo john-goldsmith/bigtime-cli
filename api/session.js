@@ -4,22 +4,22 @@ class Session extends Base {
 
   constructor() {
     super();
-    this.resourcePath = 'session';
   }
 
   /**
-   * [create description]
-   * @return {[type]} [description]
+   * Create a new session.
+   *
+   * @return {Promise<Response>}
    */
   create() {
-    this.post(this.resourcePath, {UserId: process.env.BIGTIME_USERNAME, Pwd: process.env.BIGTIME_PASSWORD})
-      .then(
-        (response) => {
-          console.log(response);
-        }
-      );
+    let url = 'session',
+        body = {
+          UserId: process.env.BIGTIME_USERNAME,
+          Pwd: process.env.BIGTIME_PASSWORD
+        };
+    return this.post(url, body);
   }
 
 }
 
-module.exports = new Session();
+module.exports = Session;

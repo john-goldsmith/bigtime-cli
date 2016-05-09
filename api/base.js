@@ -1,80 +1,160 @@
-let fetch = require('node-fetch');
+let fetch = require('isomorphic-fetch'),
+    logger = require('../logger');
 
 class Base {
 
   constructor() {
-    this.baseUrl = 'https://iq.bigtime.net/BigtimeData/api/v2/';
-    this.headers = {
+    this.baseUrl = 'https://iq.bigtime.net/BigtimeData/api/v2';
+    this.defaultHeaders = {
       'Content-Type': 'application/json'
-    }
+    };
   }
 
   /**
-   * [get description]
-   * @param  {[type]} resourcePath [description]
-   * @param  {[type]} headers      [description]
-   * @return {[type]}              [description]
+   * Issue an HTTP GET request.
+   *
+   * @param  {String} url
+   * @param  {Object} headers
+   * @return {Promise}
    */
-  get(resourcePath, headers) {
-    if (!resourcePath) throw new Error('Base#get: a resource path is required.');
-    return this.request(resourcePath, 'GET', null, headers);
+  get(url, headers = {}) {
+    if (!url) throw new Error('Base#get: a resource path is required.');
+    return this.request(url, 'GET', null, headers);
   }
 
   /**
-   * [post description]
-   * @param  {[type]} resourcePath [description]
-   * @param  {[type]} body         [description]
-   * @param  {[type]} headers      [description]
-   * @return {[type]}              [description]
+   * Issue an HTTP POST request.
+   *
+   * @param  {String} url
+   * @param  {Null|Object} body
+   * @param  {Object} headers
+   * @return {Promise}
    */
-  post(resourcePath, body = null, headers) {
-    if (!resourcePath) throw new Error('Base#post: a resource path is required.');
-    return this.request(resourcePath, 'POST', body, headers);
+  post(url, body = null, headers = {}) {
+    if (!url) throw new Error('Base#post: a resource path is required.');
+    return this.request(url, 'POST', body, headers);
   }
 
   /**
-   * [put description]
-   * @param  {[type]} resourcePath [description]
-   * @param  {[type]} body         [description]
-   * @param  {[type]} headers      [description]
-   * @return {[type]}              [description]
+   * Issue an HTTP PUT request.
+   *
+   * @param  {String} url
+   * @param  {Null|Object} body
+   * @param  {Object} headers
+   * @return {Promise}
    */
-  put(resourcePath, body = null, headers) {
-    if (!resourcePath) throw new Error('Base#put: a resource path is required.');
-    return this.request(resourcePath, 'PUT', body, headers);
+  put(url, body = null, headers = {}) {
+    if (!url) throw new Error('Base#put: a resource path is required.');
+    return this.request(url, 'PUT', body, headers);
   }
 
   /**
-   * [delete description]
-   * @param  {[type]} resourcePath [description]
-   * @param  {[type]} body         [description]
-   * @param  {[type]} headers      [description]
-   * @return {[type]}              [description]
+   * Issue an HTTP DELETE request.
+   *
+   * @param  {String} url
+   * @param  {Null|Object} body
+   * @param  {Object} headers
+   * @return {Promise}
    */
-  delete(resourcePath, body = null, headers) {
-    if (!resourcePath) throw new Error('Base#delete: a resource path is required.');
-    return this.request(resourcePath, 'DELETE', body, headers);
+  delete(url, body = null, headers = {}) {
+    if (!url) throw new Error('Base#delete: a resource path is required.');
+    return this.request(url, 'DELETE', body, headers);
   }
 
   /**
-   * [request description]
-   * @param  {[type]} resourcePath [description]
-   * @param  {String} method       [description]
-   * @param  {[type]} body         [description]
-   * @param  {Object} headers      [description]
-   * @return {[type]}              [description]
+   * Issue an HTTP request.
+   *
+   * @param  {String} url
+   * @param  {String} method
+   * @param  {Null|Object} body
+   * @param  {Object} headers
+   * @return {Promise}
    */
-  request(resourcePath, method, body, headers) {
-    headers = Object.assign(this.headers, headers);
-    console.log('request:', resourcePath, method, body, headers);
-    let url = `${this.baseUrl}${resourcePath}`;
-    return fetch(url, {
+  request(url, method, body, headers) {
+    let request = new Request(`${this.baseUrl}/${url}`, {
       method,
-      headers,
-      body
+      headers: Object.assign({}, headers, this.defaultHeaders),
+      body: JSON.stringify(body),
     });
+    logRequest(request);
+    return fetch(request)
+      .then(bodyAsJson)
+      .then(logResponse)
+      .then(checkResponseStatus);
   }
 
+  /**
+   * It's assumed this will only be called after a session has been
+   * created.
+   *
+   * @static
+   * @method authHeaders
+   * @return {Object}
+   */
+  static authHeaders() {
+    return {
+      'X-Auth-Token': process.env.BIGTIME_SESSION_TOKEN,
+      'X-Auth-Realm': process.env.BIGTIME_FIRM_ID
+    };
+  }
+
+}
+
+/**
+ * Check if a response status code is in the 2xx or 3xx families.
+ *
+ * @private
+ * @method checkResponseStatus
+ * @param  {Response} response
+ * @return {Promise}
+ */
+function checkResponseStatus(response) {
+  return (response.status > 199 && response.status < 400) ? Promise.resolve(response) : Promise.reject(response);
+}
+
+/**
+ * Converts the response body to JSON.
+ *
+ * @param  {Response} response
+ * @return {Promise<Response>}
+ */
+function bodyAsJson(response) {
+  return response.json()
+    .then(
+      (body) => {
+        response.body = body; // TODO: Is this bad?
+        return response;
+      }
+    );
+}
+
+/**
+ * Log an HTTP request to STDOUT.
+ *
+ * @private
+ * @method logResponse
+ * @param  {Request} request
+ * @return {Request}
+ */
+function logRequest(request) {
+  logger.info(`[ -> ] ${request.method} ${request.url}`);
+  logger.info(`       ${JSON.stringify(request.headers._headers)}`);
+  logger.info(`       ${request.body}\n`);
+  return request;
+}
+
+/**
+ * Log an HTTP response to STDOUT.
+ *
+ * @private
+ * @method logResponse
+ * @param  {Response} response
+ * @return {Response}
+ */
+function logResponse(response) {
+  let level = (response.status > 199 && response.status < 400) ? 'info' : 'error';
+  logger[level](`[ <- ] ${response.url} ${response.status} ${response.statusText} \n`);
+  return response;
 }
 
 module.exports = Base;
