@@ -18,7 +18,7 @@ class Base {
    * @return {Promise}
    */
   get(url, headers = {}) {
-    if (!url) throw new Error('Base#get: a resource path is required.');
+    if (!url) throw new Error('Base#get: a URL is required.');
     return this.request(url, 'GET', null, headers);
   }
 
@@ -30,8 +30,8 @@ class Base {
    * @param  {Object} headers
    * @return {Promise}
    */
-  post(url, body = null, headers = {}) {
-    if (!url) throw new Error('Base#post: a resource path is required.');
+  post(url, body = {}, headers = {}) {
+    if (!url) throw new Error('Base#post: a URL is required.');
     return this.request(url, 'POST', body, headers);
   }
 
@@ -43,8 +43,8 @@ class Base {
    * @param  {Object} headers
    * @return {Promise}
    */
-  put(url, body = null, headers = {}) {
-    if (!url) throw new Error('Base#put: a resource path is required.');
+  put(url, body = {}, headers = {}) {
+    if (!url) throw new Error('Base#put: a URL is required.');
     return this.request(url, 'PUT', body, headers);
   }
 
@@ -56,8 +56,8 @@ class Base {
    * @param  {Object} headers
    * @return {Promise}
    */
-  delete(url, body = null, headers = {}) {
-    if (!url) throw new Error('Base#delete: a resource path is required.');
+  delete(url, body = {}, headers = {}) {
+    if (!url) throw new Error('Base#delete: a URL is required.');
     return this.request(url, 'DELETE', body, headers);
   }
 
@@ -137,9 +137,10 @@ function bodyAsJson(response) {
  * @return {Request}
  */
 function logRequest(request) {
-  logger.info(`[ -> ] ${request.method} ${request.url}`);
-  logger.info(`       ${JSON.stringify(request.headers._headers)}`);
-  logger.info(`       ${request.body}\n`);
+  logger.info(`[ REQ -> ] ${request.method} ${request.url}`);
+  logger.info(`           ${JSON.stringify(request.headers._headers)}`);
+  logger.info(`           ${request.body}`);
+  logger.info(``);
   return request;
 }
 
@@ -153,7 +154,7 @@ function logRequest(request) {
  */
 function logResponse(response) {
   let level = (response.status > 199 && response.status < 400) ? 'info' : 'error';
-  logger[level](`[ <- ] ${response.url} ${response.status} ${response.statusText} \n`);
+  logger[level](`[ <- RES ] ${response.url} ${response.status} ${response.statusText} \n`);
   return response;
 }
 

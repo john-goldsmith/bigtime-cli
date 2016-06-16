@@ -1,13 +1,9 @@
-let init = require('./init'),
-    menu = require('./menu'),
-    actions = require('./actions'),
-    inputs = require('./inputs');
-    overwriteFile = require('./overwrite-file');
+let config = require('./config'),
+    app = require('./app'),
+    sample = require('./sample');
 
 module.exports = {
-  init,
-  menu,
-  actions,
-  inputs,
-  overwriteFile
+  config,
+  app,
+  sample
 };

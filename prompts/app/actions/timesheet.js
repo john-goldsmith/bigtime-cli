@@ -11,6 +11,22 @@ module.exports = [
       {
         name: 'Date range summary',
         value: 'dateRangeSummary'
+      },
+      {
+        name: 'Detail',
+        value: 'detail'
+      },
+      {
+        name: 'Create',
+        value: 'create'
+      },
+      // {
+      //   name: 'Update',
+      //   value: 'update'
+      // },
+      {
+        name: 'Destroy',
+        value: 'destroy'
       }
     ]
   }

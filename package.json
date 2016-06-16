@@ -1,18 +1,22 @@
 {
   "name": "bigtime-api",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "setup.js",
   "scripts": {
-    "session": "node ./session.js",
-    "app": "node ./app.js"
+    "setup": "node ./setup.js",
+    "app": "node ./app.js",
+    "sample": "node ./sample.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "dotenv": "^2.0.0",
+    "fs-extra": "^0.30.0",
     "inquirer": "^1.0.2",
     "isomorphic-fetch": "^2.2.1",
+    "moment": "^2.13.0",
+    "qs": "^6.2.0",
     "winston": "^2.2.0"
   }
 }

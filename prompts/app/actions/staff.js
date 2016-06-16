@@ -8,6 +8,10 @@ module.exports = [
         name: 'List',
         value: 'list'
       },
+      {
+        name: 'Detail',
+        value: 'detail'
+      }
     ]
   }
 ];

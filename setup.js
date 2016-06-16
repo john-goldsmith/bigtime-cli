@@ -28,7 +28,7 @@ if (process.env.BIGTIME_SESSION_TOKEN) {
       logger.info(`Session token: ${response.body.token}`);
       logger.info(`Firm ID: ${response.body.firm}`);
       logger.info(`Staff ID: ${response.body.staffsid}`);
-      logger.info('Store these in .env for future use, or enter them when running `npm run app`.');
+      logger.info('Store these in .env for future use, or enter them when running `npm run app` or `npm run sample`.');
     },
     (response) => {
       response ? logger.error('Error creating a new session.', response.body) : logger.info('Aborted');

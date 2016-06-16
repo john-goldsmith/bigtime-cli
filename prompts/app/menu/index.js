@@ -5,12 +5,12 @@ module.exports = [
     message: 'Main menu:',
     choices: [
       {
-        name: 'Staff',
-        value: 'staff'
-      },
-      {
         name: 'Timesheets',
         value: 'timesheet'
+      },
+      {
+        name: 'Staff',
+        value: 'staff'
       }
     ]
   }

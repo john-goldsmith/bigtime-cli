@@ -11,6 +11,11 @@ class Staff extends Base {
     return this.get(url, Base.authHeaders());
   }
 
+  detail(options = {}) {
+    let url= `staff/detail/${options.staffId}?&View=Detailed`;
+    return this.get(url, Base.authHeaders());
+  }
+
 }
 
 module.exports = Staff;
