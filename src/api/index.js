@@ -1,7 +1,7 @@
 let endpoints = require('./endpoints'),
     Timesheet = require('./timesheet'),
     Session = require('./session'),
-    Staff = require('./staff');
+    Staff = require('./staff'),
     Sample = require('./sample');
 
 module.exports = {

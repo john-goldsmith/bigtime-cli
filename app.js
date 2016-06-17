@@ -2,14 +2,16 @@ let dotenv = require('dotenv');
 dotenv.config();
 
 let fs = require('fs-extra'),
-    api = require('./api'),
-    logger = require('./logger'),
+    api = require('./src/api'),
+    logger = require('./src/util').logger,
     inquirer = require('inquirer'),
-    prompts = require('./prompts'),
+    prompts = require('./src/prompts'),
     moment = require('moment'),
-    zeroPad = require('./util').zeroPad,
+    zeroPad = require('./src/util').zeroPad,
+    changeCase = require('change-case'),
     menuSelection = null,
-    actionSelection = null;
+    actionSelection = null,
+    user = null;
 
 inquirer.prompt(prompts.config)
   .then(
@@ -21,7 +23,16 @@ inquirer.prompt(prompts.config)
       process.env.BIGTIME_SESSION_TOKEN = answers.sessionToken;
       process.env.BIGTIME_FIRM_ID = answers.firmId;
       process.env.BIGTIME_STAFF_ID = answers.staffId;
+      return api.staff.detail({staffId: process.env.BIGTIME_STAFF_ID});
+    }
+  )
+  .then(
+    (response) => {
+      user = response.body;
       return inquirer.prompt(prompts.app.menu);
+    },
+    () => {
+      //
     }
   )
   .then(
@@ -62,7 +73,7 @@ inquirer.prompt(prompts.config)
       let now = moment(),
           month = zeroPad(now.month() + 1),
           day = zeroPad(now.date()),
-          filename = `./results/${process.env.BIGTIME_STAFF_ID}/${menuSelection}/${actionSelection}/${now.year()}-${month}-${day}-${now.valueOf()}.json`;
+          filename = `./results/${changeCase.paramCase(user.FullName)}/${menuSelection}/${actionSelection}/${now.year()}-${month}-${day}-${now.valueOf()}.json`;
       fs.outputFile(filename, JSON.stringify(response.body), (err) => {
         if (err) throw err;
         let message = (Array.isArray(response.body)) ? `Saved ${response.body.length} results to ${filename}` : `Saved results to ${filename}`;

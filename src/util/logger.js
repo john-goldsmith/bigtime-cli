@@ -3,7 +3,7 @@ let winston = require('winston'),
       transports: [
         new (winston.transports.Console)({
           colorize: 'all',
-          showLevel: false,
+          showLevel: false
         })
       ]
     });

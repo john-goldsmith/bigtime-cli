@@ -2,7 +2,7 @@ module.exports = [
   {
     type: 'input',
     name: 'start',
-    message: 'Start date (YYYY-MM-DD):',
+    message: 'Start date (YYYY-MM-DD):'
   },
   {
     type: 'input',

@@ -1,8 +1,8 @@
 let dotenv = require('dotenv');
 dotenv.config();
 
-let api = require('./api'),
-    logger = require('./logger'),
+let api = require('./src/api'),
+    logger = require('./src/util').logger,
     inquirer = require('inquirer');
 
 if (!process.env.BIGTIME_USERNAME || !process.env.BIGTIME_PASSWORD) throw new Error('Missing BIGTIME_USERNAME or BIGTIME_PASSWORD environment variables.');

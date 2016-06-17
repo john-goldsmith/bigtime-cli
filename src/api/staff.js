@@ -12,7 +12,7 @@ class Staff extends Base {
   }
 
   detail(options = {}) {
-    let url= `staff/detail/${options.staffId}?&View=Detailed`;
+    let url = `staff/detail/${options.staffId}?&View=Detailed`;
     return this.get(url, Base.authHeaders());
   }
 

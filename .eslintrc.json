@@ -1,0 +1,46 @@
+{
+  "env": {
+    "es6": true,
+    "node": true
+  },
+  "extends": "eslint:recommended",
+  "rules": {
+    "indent": [
+      "error",
+      2,
+      {
+        "VariableDeclarator": 2
+      }
+    ],
+    "linebreak-style": [
+      "error",
+      "unix"
+    ],
+    "quotes": [
+      "error",
+      "single",
+      {
+        "allowTemplateLiterals": true
+      }
+    ],
+    "semi": [
+      "error",
+      "always"
+    ],
+    "one-var-declaration-per-line": [
+      "error",
+      "always"
+    ],
+    "no-console": [
+      "error",
+      {
+        "allow": [
+          "log"
+        ]
+      }
+    ],
+    "prefer-template": [
+      "error"
+    ]
+  }
+}

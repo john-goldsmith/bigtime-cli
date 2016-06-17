@@ -7,9 +7,9 @@
 1. Run `npm i`
 
 ## Running
-1. Run `npm run setup` to obtain an API token.
-1. Run `npm run app` to start the main app.
-1. Run `npm run sample` to start the data sampling and submittal app.
+1. Duplicate `.env.sample` and provide the `BIGTIME_USERNAME` and `BIGTIME_PASSWORD` values.
+1. Run `npm run setup` to obtain your API token, staff ID, and firm ID.
+1. Run `npm run app` to start the main app or `npm run sample` to start the data sampling and submittal app.
 
 ## References
 - [BigTime API](http://iq.bigtime.net/BigtimeData/api/v2/help/Overview)

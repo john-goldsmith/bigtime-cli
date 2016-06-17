@@ -85,7 +85,7 @@ module.exports = [
     type: 'input',
     name: 'hours',
     message: 'Hours:'
-  },
+  }
   // {
   //   type: 'input',
   //   name: 'notes',

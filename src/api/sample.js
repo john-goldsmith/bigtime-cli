@@ -3,7 +3,7 @@ let Base = require('./base'),
     prompts = require('../prompts'),
     zeroPad = require('../util').zeroPad,
     moment = require('moment'),
-    logger = require('../logger'),
+    logger = require('../util').logger,
     timesheet = new (require('./timesheet')),
     config = require('../config');
 
@@ -120,19 +120,19 @@ class Sample extends Base {
           totalEntries = project.length,
           totalHours = null,
           projectName = null,
-          projectId = null,
+          projectSid = null,
           clientName = null,
           clientId = null;
       project.forEach((entry) => {
         totalHours += entry.Hours_IN;
         projectName = entry.ProjectNm;
         clientName = entry.ClientNm;
-        projectId = entry.ProjectSID;
+        projectSid = entry.ProjectSID;
         clientId = entry.ClientID;
       });
       this.transformedData.meta.projects.push({
         projectName,
-        projectId,
+        projectSid,
         clientName,
         clientId,
         totalHours,
@@ -185,7 +185,6 @@ class Sample extends Base {
         this._setRandomTime();
         let newTotal = Number(this._getTotalLoggedTimeForDay(day) + this.randomTime);
         if (newTotal < Number(process.env.BIGTIME_SAMPLE_MAX_DAILY_HOURS)) {
-          this.randomEntry.projectSid = this.randomEntry.projectId;
           this.randomEntry.hours = this.randomTime;
           this.randomEntry.date = date;
           this.sampleData[i].push(Object.assign({}, this.randomEntry));
@@ -207,7 +206,7 @@ class Sample extends Base {
 
   /**
    * [_getRandomEntry description]
-   * @return {[type]} [description]
+   * @return {undefined} [description]
    */
   _setRandomEntry() {
     let randomIndex = Number(Math.floor(Math.random() * this.weightedProjectData.length)),
@@ -217,7 +216,7 @@ class Sample extends Base {
 
   /**
    * [_getRandomTime description]
-   * @return {[type]} [description]
+   * @return {undefined} [description]
    */
   _setRandomTime() {
     let increments = 60 / Number(process.env.BIGTIME_SAMPLE_TIME_INCREMENT_MINUTES),
@@ -234,7 +233,7 @@ class Sample extends Base {
    * @return {undefined}
    */
   _displaySampleData() {
-    this.sampleData.forEach((day, i) => {
+    this.sampleData.forEach((day) => {
       let entryLabel = day.length === 1 ? 'entry' : 'entries',
           dateLabel = moment(day[0].date).format('ddd MMMM DD, YYYY'),
           divider = day.length === 1 ? '---------------------------' : '-----------------------------',
@@ -276,8 +275,8 @@ class Sample extends Base {
 
 /**
  * [reduceEntry description]
- * @param  {[type]} entry [description]
- * @return {[type]}       [description]
+ * @param  {Object} entry
+ * @return {Object}
  */
 function reduceEntry (entry) {
   return {
