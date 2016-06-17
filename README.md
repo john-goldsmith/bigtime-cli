@@ -5,9 +5,9 @@
 
 ## Setup
 1. Run `npm i`
+1. Duplicate `.env.sample` and provide the `BIGTIME_USERNAME` and `BIGTIME_PASSWORD` values.
 
 ## Running
-1. Duplicate `.env.sample` and provide the `BIGTIME_USERNAME` and `BIGTIME_PASSWORD` values.
 1. Run `npm run setup` to obtain your API token, staff ID, and firm ID.
 1. Run `npm run app` to start the main app or `npm run sample` to start the data sampling and submittal app.
 
