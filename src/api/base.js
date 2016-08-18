@@ -102,7 +102,7 @@ class Base {
    * @method authHeaders
    * @return {Object}
    */
-  static authHeaders() {
+  static get authHeaders() {
     return {
       'X-Auth-Token': process.env.BIGTIME_SESSION_TOKEN,
       'X-Auth-Realm': process.env.BIGTIME_FIRM_ID

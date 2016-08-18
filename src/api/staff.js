@@ -8,12 +8,12 @@ class Staff extends Base {
 
   list(options = {}) {
     let url = `staff?ShowInactive=${options.showInactive || false}`;
-    return this.get(url, Base.authHeaders());
+    return this.get(url, Base.authHeaders);
   }
 
   detail(options = {}) {
     let url = `staff/detail/${options.staffId}?&View=Detailed`;
-    return this.get(url, Base.authHeaders());
+    return this.get(url, Base.authHeaders);
   }
 
 }

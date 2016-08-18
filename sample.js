@@ -13,7 +13,7 @@ let fs = require('fs-extra'),
 
 inquirer.prompt(prompts.config)
   .then(
-    (answers) => {
+    answers => {
       if (!answers.sessionToken || !answers.firmId || !answers.staffId) {
         logger.error('Missing session token, firm ID, or staff ID.');
         process.exit();
@@ -25,27 +25,27 @@ inquirer.prompt(prompts.config)
     }
   )
   .then(
-    (response) => {
+    response => {
       user = response.body;
       return inquirer.prompt(prompts.sample.dateRange);
     },
     () => {
-      //
+      // TODO
     }
   )
   .then(
-    (answers) => {
+    answers => {
       return api.sample.run(answers);
     }
   )
   .then(
-    (response) => {
+    response => {
       if (!response) return;
       let now = moment(),
           month = zeroPad(now.month() + 1),
           day = zeroPad(now.date()),
           filename = `./results/${changeCase.paramCase(user.FullName)}/sample/${now.year()}-${month}-${day}-${now.valueOf()}.json`;
-      fs.outputFile(filename, JSON.stringify(response), (err) => {
+      fs.outputFile(filename, JSON.stringify(response), err => {
         if (err) throw err;
         logger.info(`Saved results to ${filename}`);
       });

@@ -19,32 +19,28 @@ if (process.env.BIGTIME_SESSION_TOKEN) {
     ]
   )
   .then(
-    (answers) => {
-      return (answers.requestNewToken) ? api.session.create() : Promise.reject();
-    }
+    answers => answers.requestNewToken ? api.session.create() : Promise.reject()
   )
   .then(
-    (response) => {
+    response => {
       logger.info(`Session token: ${response.body.token}`);
       logger.info(`Firm ID: ${response.body.firm}`);
       logger.info(`Staff ID: ${response.body.staffsid}`);
       logger.info('Store these in .env for future use, or enter them when running `npm run app` or `npm run sample`.');
     },
-    (response) => {
-      response ? logger.error('Error creating a new session.', response.body) : logger.info('Aborted');
-    }
+    response => response ? logger.error('Error creating a new session.', response.body) : logger.info('Aborted')
   );
   return;
 }
 
 api.session.create()
   .then(
-    (response) => {
+    response => {
       logger.info(`API token: ${response.body.token}`);
       logger.info(`Firm ID: ${response.body.firm}`);
       logger.info(`Staff ID: ${response.body.staffsid}`);
     },
-    (response) => {
+    response => {
       logger.error('Error creating a new session.', response.body);
     }
   );

@@ -13,7 +13,7 @@ class Timesheet extends Base {
    */
   dateRange(options) {
     let url = `time/Sheet/${process.env.BIGTIME_STAFF_ID}?StartDt=${options.start}&EndDt=${options.end}&View=Detailed`;
-    return this.get(url, Base.authHeaders());
+    return this.get(url, Base.authHeaders);
   }
 
   /**
@@ -23,7 +23,7 @@ class Timesheet extends Base {
    */
   dateRangeSummary(options) {
     let url = `time/TotalByDay/${process.env.BIGTIME_STAFF_ID}?StartDt=${options.start}&EndDt=${options.end}`;
-    return this.get(url, Base.authHeaders());
+    return this.get(url, Base.authHeaders);
   }
 
   /**
@@ -33,7 +33,7 @@ class Timesheet extends Base {
    */
   detail(options) {
     let url = `time/${options.sid}`;
-    return this.get(url, Base.authHeaders());
+    return this.get(url, Base.authHeaders);
   }
 
   /**
@@ -65,7 +65,7 @@ class Timesheet extends Base {
           // HoursBillable: options.hoursBillable, // documentation claims this is required, but doesn't appear to be (or the API has a sensible default)
           // ChargeBillable: options.chargeBillable // documentation claims this is required, but doesn't appear to be (or the API has a sensible default)
         };
-    return this.post(url, body, Base.authHeaders());
+    return this.post(url, body, Base.authHeaders);
   }
 
   /**
@@ -98,7 +98,7 @@ class Timesheet extends Base {
           HoursBillable: options.hoursBillable, // required
           ChargeBillable: options.chargeBillable // required
         };
-    return this.post(url, body, Base.authHeaders());
+    return this.post(url, body, Base.authHeaders);
   }
 
   /**
@@ -110,7 +110,7 @@ class Timesheet extends Base {
     if (!options.confirm) return;
     let url = `time/${options.sid}`,
         body = {};
-    return this.delete(url, body, Base.authHeaders());
+    return this.delete(url, body, Base.authHeaders);
   }
 
 }

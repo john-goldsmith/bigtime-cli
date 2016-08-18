@@ -5,7 +5,16 @@ let Base = require('./base'),
     moment = require('moment'),
     logger = require('../util').logger,
     timesheet = new (require('./timesheet')),
-    config = require('../config');
+    config = require('../config'),
+    queue = require('async/queue'),
+    createTimeEntryQueue = queue(createTimeEntryWorker);
+
+function createTimeEntryWorker (entry, callback) {
+  timesheet.create(entry);
+  setTimeout(() => {
+    callback();
+  }, 2000); // Respect the API limt of 1 request every 2 seconds
+}
 
 class Sample extends Base {
 
@@ -39,33 +48,38 @@ class Sample extends Base {
    * @param  {Object} answers
    * @return {Promise}
    */
-  run(answers) {
+  run (answers) {
     this.answers = answers;
     process.env.BIGTIME_SAMPLE_NUM_ENTRIES = answers.numEntries;
     return this._getData()
       .then(
-        (response) => {
+        response => {
           this.rawResponseBody = response.body;
           this._transform();
           this._appendMetaData();
           this._weightProjectData();
           this._setupSampleData();
-          this._populateSampleData();
-          this._displaySampleData();
-          return this._prompt();
+          return this._getPreexistingData();
         },
         () => {
-          //
+          // TODO
         }
       )
       .then(
-        (answers) => {
+        () => {
+          this._populateSampleData();
+          this._displaySampleData();
+          return this._prompt();
+        }
+      )
+      .then(
+        answers => {
           if (!answers.confirmSubmit) return null;
-          this._submit();
+          this._queue();
           return this.sampleData;
         },
         () => {
-          //
+          // TODO
         }
       );
   }
@@ -78,7 +92,34 @@ class Sample extends Base {
    */
   _getData() {
     let url = `time/Sheet/${process.env.BIGTIME_STAFF_ID}?StartDt=${this.answers.dataStart}&EndDt=${this.answers.dataEnd}&View=Detailed`;
-    return this.get(url, Base.authHeaders());
+    return this.get(url, Base.authHeaders);
+    // const url = endpoints.staffTimeSheet(process.env.BIGTIME_STAFF_ID, {
+    //   StartDt: this.answers.dataStart,
+    //   EndDt: this.answers.dataEnd
+    // });
+    // return this.get(url, Base.authHeaders);
+  }
+
+  /**
+   * [_getSubmittalData description]
+   * @return {Promise}
+   */
+  _getPreexistingData() {
+    let submitStartMoment = moment(this.answers.submitEnd).subtract(this.sampleData.length - 1, 'days'),
+        submitStartYear = submitStartMoment.year(),
+        submitStartMonth = zeroPad(submitStartMoment.month() + 1),
+        submitStartDate = zeroPad(submitStartMoment.date()),
+        start = `${submitStartYear}-${submitStartMonth}-${submitStartDate}`,
+        end = this.answers.submitEnd;
+    return timesheet.dateRange({start, end})
+      .then(
+        response => {
+          this.preexistingData = response.body;
+        },
+        error => {
+          // TODO
+        }
+      );
   }
 
   /**
@@ -88,7 +129,7 @@ class Sample extends Base {
    * @return {undefined}
    */
   _transform() {
-    this.rawResponseBody.forEach((entry) => {
+    this.rawResponseBody.forEach(entry => {
       let reducedEntry = reduceEntry(entry);
       if (!this.transformedData.data.byProject[entry.ProjectSID]) this.transformedData.data.byProject[entry.ProjectSID] = [];
       this.transformedData.data.byProject[entry.ProjectSID].push(reducedEntry);
@@ -110,12 +151,12 @@ class Sample extends Base {
     this.transformedData.meta.entryCount = this.rawResponseBody.length;
     this.transformedData.meta.projectCount = projectKeys.length;
     this.transformedData.meta.dateCount = dateKeys.length;
-    dateKeys.forEach((dateKey) => {
+    dateKeys.forEach(dateKey => {
       this.transformedData.data.byDate[dateKey].forEach((entry) => {
         this.transformedData.meta.totalHours += entry.Hours_IN;
       });
     });
-    projectKeys.forEach((projectKey) => {
+    projectKeys.forEach(projectKey => {
       let project = this.transformedData.data.byProject[projectKey],
           totalEntries = project.length,
           totalHours = null,
@@ -150,7 +191,7 @@ class Sample extends Base {
    * @return {undefined}
    */
   _weightProjectData() {
-    this.transformedData.meta.projects.forEach((project) => {
+    this.transformedData.meta.projects.forEach(project => {
       for (let i = 0; i < project.totalEntries; i++) {
         if (!config.blackListedProjectNames.includes(project.projectName)) this.weightedProjectData.push(project);
       }
@@ -158,7 +199,7 @@ class Sample extends Base {
   }
 
   /**
-   * [_populateSampleData description]
+   * [_setupSampleData description]
    *
    * @return {undefined}
    */
@@ -169,18 +210,19 @@ class Sample extends Base {
   }
 
   /**
-   * [_foo description]
+   * [_populateSampleData description]
    *
    * @return {undefined}
    */
   _populateSampleData() {
     this.sampleData.forEach((day, i) => {
+      console.log('day', i);
       let entrySubmit = moment(this.answers.submitEnd).subtract(i, 'days'),
           entrySubmitYear = entrySubmit.year(),
           entrySubmitMonth = zeroPad(entrySubmit.month() + 1),
           entrySubmitDate = zeroPad(entrySubmit.date()),
           date = `${entrySubmitYear}-${entrySubmitMonth}-${entrySubmitDate}`;
-      while (this._getTotalLoggedTimeForDay(day) < Number(process.env.BIGTIME_SAMPLE_MIN_DAILY_HOURS)) {
+      while (this._getTotalLoggedTimeForDay(day, date) < Number(process.env.BIGTIME_SAMPLE_MIN_DAILY_HOURS)) {
         this._setRandomEntry();
         this._setRandomTime();
         let newTotal = Number(this._getTotalLoggedTimeForDay(day) + this.randomTime);
@@ -198,9 +240,15 @@ class Sample extends Base {
    * @param  {Object} day
    * @return {Number}
    */
-  _getTotalLoggedTimeForDay(day) {
-    let totalLoggedTime = 0;
+  _getTotalLoggedTimeForDay(day, date) {
+    let totalLoggedTime = 0,
+        totalExistingTime = 0;
+    let existing = this.preexistingData.filter(item => item.Dt === date);
+    existing.forEach(e => totalLoggedTime = Number(totalLoggedTime + e.Hours_IN));
     day.forEach(entry => totalLoggedTime = Number(totalLoggedTime + entry.hours));
+    // console.log(`--- ${date} ---`)
+    // console.log('existing:', totalExistingTime)
+    // console.log('total:', totalLoggedTime, `(${existing.length} existing)`)
     return totalLoggedTime;
   }
 
@@ -233,20 +281,25 @@ class Sample extends Base {
    * @return {undefined}
    */
   _displaySampleData() {
-    this.sampleData.forEach((day) => {
-      let entryLabel = day.length === 1 ? 'entry' : 'entries',
-          dateLabel = moment(day[0].date).format('ddd MMMM DD, YYYY'),
-          divider = day.length === 1 ? '---------------------------' : '-----------------------------',
-          total = 0;
-      logger.info(`${dateLabel} (${day.length} ${entryLabel})`);
-      console.log(divider);
-      day.forEach((entry) => {
-        total += entry.hours;
-        let hourLabel = entry.hours === 1 ? 'hour' : 'hours';
-        console.log(`${entry.projectName}: ${entry.hours} ${hourLabel}`);
-      });
-      logger.info(`TOTAL: ${total}`);
-      console.log(``);
+    this.sampleData.forEach((day, i) => {
+      if (day.length) {
+        let entryLabel = day.length === 1 ? 'entry' : 'entries',
+            dateLabel = moment(day[0].date).format('ddd MMMM DD, YYYY'),
+            divider = day.length === 1 ? '---------------------------' : '-----------------------------',
+            total = 0;
+        logger.info(`${dateLabel} (${day.length} ${entryLabel})`);
+        console.log(divider);
+        day.forEach(entry => {
+          total += entry.hours;
+          let hourLabel = entry.hours === 1 ? 'hour' : 'hours';
+          console.log(`${entry.projectName}: ${entry.hours} ${hourLabel}`);
+        });
+        logger.info(`TOTAL: ${total}`);
+        console.log('');
+      } else {
+        console.log('(No entries for this date. Preexisting entries were found.)');
+        console.log('');
+      }
     });
   }
 
@@ -259,14 +312,13 @@ class Sample extends Base {
   }
 
   /**
-   * [_submit description]
+   * [_queue description]
    * @return {undefined} [description]
    */
-  _submit() {
-    // TODO: API requests are limited to one every two seconds
+  _queue() {
     this.sampleData.forEach((day) => {
-      day.forEach((entry) => {
-        timesheet.create(entry);
+      day.forEach(entry => {
+        createTimeEntryQueue.push(entry);
       });
     });
   }
